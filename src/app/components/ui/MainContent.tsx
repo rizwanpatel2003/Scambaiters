@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
 import { IconSearch } from "@tabler/icons-react";
@@ -36,9 +34,9 @@ Posts()
     return (
         
      
-         <div className=" h-screen flex  flex-1 items-center flex-col  ">
+         <div className=" h-screen flex  flex-1 items-center flex-col ">
             <div className="flex w-2/3 justify-center items-center ">
-         <input type="text" className=" w-full p-2 h-16 bg-neutral-950 shadow-sm shadow-white text-white border-none  transition-transform transform hover:-translate-y-1 hover:shadow-md hover:shadow-white mt-10 rounded-full mb-10 border-green-300" placeholder="Type something..."/>
+         <input type="text" className=" w-full p-2 h-16 bg-neutral-950 shadow-sm shadow-white  border-none  transition-transform transform hover:-translate-y-1 hover:shadow-md hover:shadow-white mt-10 rounded-full mb-10 border-green-300" placeholder="Type something..."/>
          
            </div>  
            <h1 className="text-3xl font-Rampart  font-extrabold text-white self-start ml-2">Feed</h1>   
@@ -47,7 +45,7 @@ Posts()
          
          return  ( 
             
-           <PostCard postId={post._id} name={post.name} title={post.title} content={post.content} communityId={post.communitid} Tlike={post.likes} comments={post.comments.length} key={post._id}></PostCard>
+           <PostCard postId={post._id} name={post.name} title={post.title} content={post.content} communityId={post.communitid} Tlike={post.likes || 0} comments={post.comments?.length || 0} media={post.media} key={post._id}></PostCard>
          )
           {/* <div className="w-3/4 h-[200px] shadow-sm hover:shadow-md hover:shadow-gray-100 shadow-red-50 rounded-[38px] mt-5 ml-5 flex flex-col justify-evenly items-center bg-neutral-900 " key={post._id} onClick={
             ()=>{
@@ -78,7 +76,7 @@ Posts()
 
 
           }
-          <div className="w-full h-screen bg-yellow-400 ">
+          <div className="w-full h-screen bg-black rounded-lg ">
 
                 </div>
 

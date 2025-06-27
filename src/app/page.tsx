@@ -8,7 +8,7 @@ import Sidebar from "./components/ui/Sidebar";
 export default function Home() {
   return (
     
-     <div className="w-full flex overflow-auto">
+     <div className="w-full flex overflow-auto bg-white">
        <Sidebar></Sidebar>
       <MainContent></MainContent>
       <Leftbar></Leftbar>  

@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest, NextResponse } from "next/server";
-
-  import { Community}  from "../../../Models/Community"
+import { getToken } from "../../../helper/auth";
+import connectDB from "../../../lib/db";
+import { Community } from "../../../Models/Community";
 
 export async function POST(request:NextRequest) {
     try {

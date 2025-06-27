@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 import React from 'react'
 
 
 
-function Banner({name}) {
+function Banner({name}:{name:string}) {
    
 
     return (

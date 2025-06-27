@@ -1,17 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
-import Banner from 'app/components/ui/Banner';
-import JoinCard from 'app/components/ui/JoinCard';
-import Pinned from 'app/components/ui/Pinned';
-import PostCard from 'app/components/ui/PostCard';
-import Sidebar from 'app/components/ui/Sidebar';
+import Banner from '../../components/ui/Banner';
+import JoinCard from '../../components/ui/JoinCard';
+import Pinned from '../../components/ui/Pinned';
+import PostCard from '../../components/ui/PostCard';
+import Sidebar from '../../components/ui/Sidebar';
 
 import axios from 'axios';
 import { useParams } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
-import Description from 'app/components/ui/description';
+import Description from '../../components/ui/description';
 
 // interface Item {
 //   map(arg0: (post: Item) => React.JSX.Element): React.ReactNode;

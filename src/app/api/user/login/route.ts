@@ -1,64 +1,71 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { User } from "app/Models/User";
+import { User } from "../../../Models/User";
 import { NextRequest, NextResponse } from "next/server";
-import  bcrypt from "bcryptjs"
+import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
-import { connectDB } from "app/database/database";
+import connectDB from "../../../lib/db";
 
-connectDB()
-
-export  async function POST(request:NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-     const reqBody= await request.json();
-      const {email ,password}= reqBody;
+     await connectDB();
+    const reqBody = await request.json();
+    console.log(reqBody);
+    const { email, password } = reqBody;
      
-     
-      const findUser= await User.findOne({email});
-      if(!findUser){
-       return NextResponse.json({
-          error:"user not registered",
-          status:401
-       })
+    const findUser = await User.findOne({ email });
+    if (!findUser) {
+      return NextResponse.json({
+        error: "user not registered",
+        status: 401
+      });
+    }
+    
+    const passwordcheck = await bcrypt.compare(password, findUser.password);
+    if (!passwordcheck) {
+      return NextResponse.json({
+        error: "incorrect password",
+        status: 401
+      });
+    }
+
+    const token = jwt.sign(
+      { id: findUser._id, email: email },
+      process.env.TOKEN_SECRET!,
+      {
+        expiresIn: "7d"
       }
-     const passwordcheck:boolean= await bcrypt.compare(password,findUser.password)
-     if(!passwordcheck){
-        return NextResponse.json({
-            error:"incorrect password",
-            status:401
-         })
+    );
 
-     }
+    const user = await User.findByIdAndUpdate(
+      findUser._id,
+      { $set: { accessToken: token } },
+      { new: true }
+    );
 
-     const token= jwt.sign({id:findUser._id,emai:email},process.env.TOKEN_SECRET!,{
-        expiresIn:process.env.TOKEN_SECRET_EXPIRY
-     })
+    // Create the response
+    const response = NextResponse.json({
+      message: "user logged in successfully",
+      data: user,
+      status: 200
+    });
 
-    
-    
-     const user= await User.findByIdAndUpdate(findUser._id,{
-       $set:{accessToken:token}
-    
-     },{
-        new:true
-     })
-        console.log(user.accessToken)
-    const response= NextResponse.json({
-        message:"user logged in successsfully",
-        data:user,
-        status:200
-     })
+    // Set the cookie with proper options
+    response.cookies.set({
+      name: "token",
+      value: token,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60 // 7 days
+    });
 
-     response.cookies.set("token",token,{
-      httpOnly:true
-     })
-    return response
-  } 
-  catch (error:any) {
-     console.log("unable to find user",error.message)
+    console.log("Setting cookie in response:", response.cookies.getAll());
+    return response;
+  } catch (error: any) {
+    console.log("Login error:", error.message);
+    return NextResponse.json({
+      error: "Login failed",
+      status: 500
+    });
   }
-
-
- 
-    
 }

@@ -1,12 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { connectDB } from "app/database/database";
-import { Community } from "app/Models/Community";
-import { NextRequest,NextResponse } from "next/server";
+import connectDB from "../../../lib/db";
+import { Community } from "../../../Models/Community";
+import { NextRequest, NextResponse } from "next/server";
 
-connectDB()
-export async function GET(requst:NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-     const community= await Community.find()
+    await connectDB();
+    const community= await Community.find()
 
     const names=community.map((item)=>{
          return item.name

@@ -1,5 +1,5 @@
-import { connectDB } from "app/database/database";
-import { User } from "app/Models/User";
+import connectDB from "../../../lib/db";
+import { User } from "../../../Models/User";
 import { NextRequest, NextResponse } from "next/server";
 
 connectDB()

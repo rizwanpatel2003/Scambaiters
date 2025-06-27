@@ -1,18 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { connectDB } from "app/database/database";
-import { Post } from "app/Models/Post";
+import connectDB from "../../../lib/db";
+import { Post } from "../../../Models/Post";
 import { NextRequest, NextResponse } from "next/server";
 
-connectDB()
-export  async function GET(request:NextRequest) {
- 
-     const postdata= await Post.find()
-
-     return NextResponse.json(
-        {
-            postdata
-        }
-     )
-
-    
+export async function GET(request: NextRequest) {
+    await connectDB(); // Ensure connection is established before querying
+    const postdata = await Post.find();
+    return NextResponse.json({ postdata });
 }

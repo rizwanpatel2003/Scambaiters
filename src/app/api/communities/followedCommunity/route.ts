@@ -1,15 +1,16 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { connectDB } from "app/database/database";
-import { Post } from "app/Models/Post";
+import connectDB from "../../../lib/db";
+import { Post } from "../../../Models/Post";
 import { NextRequest, NextResponse } from "next/server";
 import { title } from "process";
-import { ObjectId } from "mongodb"; 
-import { User } from "app/Models/User";
-import { Community } from "app/Models/Community";
-connectDB()
-export  async function POST(request:NextRequest) {
+import { ObjectId } from "mongodb";
+import { User } from "../../../Models/User";
+import { Community } from "../../../Models/Community";
+import { getToken } from "../../../helper/auth";
+
+export async function POST(request: NextRequest) {
    
    try {
+      await connectDB();
       const reqbody= await request.json();
       const{userId}=reqbody;
      

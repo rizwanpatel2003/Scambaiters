@@ -1,14 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
-import JoinCard from 'app/components/ui/JoinCard'
-import User from 'app/components/ui/user'
+import JoinCard from '../components/ui/JoinCard'
+import User from '../components/ui/User'
 import axios from 'axios';
 import React, { useEffect, useState } from 'react'
 
 
 function Page() {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const [Community,setcom]=useState<any>([])
     const curentuser= async function () {
         try {
@@ -36,7 +34,7 @@ function Page() {
         <div className="w-5/12 mx-14 h-[500px] bg-neutral-950 rounded-[38px] shadow-sm p-4 shadow-white
         transition-transform transform hover:-translate-y-1 hover:shadow-md hover:shadow-white flex justify-center items-center p-[20vh] ">
          
-          <User></User>
+         <User></User>
            
 
         </div>

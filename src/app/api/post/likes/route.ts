@@ -1,66 +1,72 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { connectDB } from "app/database/database";
-import { Post } from "app/Models/Post";
-import { User } from "app/Models/User";
+import connectDB from "../../../lib/db";
+import { Post } from "../../../Models/Post";
+import { User } from "../../../Models/User";
 import { NextRequest, NextResponse } from "next/server";
 
-connectDB()
-
-export async function POST(request:NextRequest) {
-
+export async function POST(request: NextRequest) {
     try {
-        const reqBody= await request.json();
-        const{userId,postId}=reqBody
-        console.log(userId,postId)
-        if([userId,postId].some((field)=>{
-          return  field===null||undefined;
-     })){
-   return NextResponse.redirect("/Account/login")
-     }
-      const user= await User.findById(userId);
-     
-      if(user.postLiked.some((field:any)=>{
-            return String(field)===postId
-      })){
-        await User.findByIdAndUpdate(userId,{ $pull:{ postLiked:postId }},{new:true})
-        await Post.findByIdAndUpdate(postId,{
-             $inc:{
-                 likes:-1
-             }
-          },{new:true})
+        await connectDB();
+        const reqBody = await request.json();
+        const { userId, postId } = reqBody;
+        
+        if (!userId || !postId) {
+            return NextResponse.redirect("/Account/login");
+        }
 
-       const updateduser= await User.findById(userId)
-          return NextResponse.json({
-            message:"like deletion successful",
-            data:updateduser,
-            status:200
-          })
-        
-       
-         }
-         
-        
-       await User.findByIdAndUpdate(userId,{ $push:{ postLiked:postId }},{new:true})
-        await Post.findByIdAndUpdate(postId,{
-             $inc:{
-                 likes:1
-             }
-          },{new:true})
-  
-       const updateduser= await User.findById(userId)
+        // Check if post exists
+        const post = await Post.findById(postId);
+        if (!post) {
+            return NextResponse.json({
+                message: "Post not found",
+                status: 404
+            });
+        }
+
+        // Check if user has already liked the post
+        const user = await User.findById(userId);
+        if (!user) {
+            return NextResponse.json({
+                message: "User not found",
+                status: 404
+            });
+        }
+
+        const hasLiked = user.postLiked?.some((field: any) => String(field) === String(postId)) || false;
+
+        if (hasLiked) {
+            // Unlike: Remove post from user's liked posts and decrement count, but never go below zero
+            await User.findByIdAndUpdate(
+                userId,
+                { $pull: { postLiked: postId } }
+            );
+
+            await Post.findByIdAndUpdate(
+                postId,
+                { $set: { likes: Math.max(0, (post.likes || 0) - 1) } }
+            );
+        } else {
+            // Like: Add post to user's liked posts and increment count
+            await User.findByIdAndUpdate(
+                userId,
+                { $addToSet: { postLiked: postId } }
+            );
+
+            await Post.findByIdAndUpdate(
+                postId,
+                { $inc: { likes: 1 } }
+            );
+        }
+
         return NextResponse.json({
-          message:"updation like successful",
-          data:updateduser,
-          status:200
-        })
+            message: hasLiked ? "Post unliked successfully" : "Post liked successfully",
+            status: 200
+        });
     } catch (error) {
-        console.log("the like updatation failed!!",error)
+        console.error("Like update failed:", error);
         return NextResponse.json({
-            message:"the like updatation failed!!",
-            error:error,
-           status:401
-        })
+            message: "Like update failed",
+            error: error,
+            status: 500
+        });
     }
-    
 }

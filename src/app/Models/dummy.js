@@ -1,7 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import mongoose from "mongoose"
-
- 
 
 const dummySchema= new mongoose.Schema({
     avatar:{
@@ -11,6 +8,5 @@ const dummySchema= new mongoose.Schema({
         type:String
     }
 },{})
-
 
 export const Tree= mongoose.models.trees||mongoose.model("trees",dummySchema)

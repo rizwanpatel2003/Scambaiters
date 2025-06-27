@@ -1,119 +1,306 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 import axios from 'axios';
 import React, { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form';
-interface posting{
-  name:string,
-  userid:string,
-  title:string,
-content:string
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-hot-toast';
+import MediaUpload from '../components/ui/MediaUpload';
+
+interface MediaFile {
+  url: string;
+  type: 'image' | 'video';
+  publicId: string;
+}
+
+interface Community {
+  _id: string;
+  name: string;
 }
 
 function Page() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
+  const [communityName, setCommunityName] = useState('');
+  const [communities, setCommunities] = useState<string[]>([]);
+  const [filteredCommunities, setFilteredCommunities] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isValidCommunity, setIsValidCommunity] = useState(false);
 
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-      } = useForm();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
 
-      const [names,setnames] = useState<string[]>([])
-      const[inp,setinp]=useState<string>("");
-      const [selected,setselected]=useState<string>();
-      const [listv,setlistv]=useState<boolean>(false)
-    const community=async function() {
+  // Fetch all communities on component mount
+  useEffect(() => {
+    fetchCommunities();
+  }, []);
+
+  const fetchCommunities = async () => {
+    try {
+      const response = await axios.get("http://localhost:3000/api/communities/communitynames");
+      // The API returns an array of community names directly
+      if (Array.isArray(response.data.data)) {
+        setCommunities(response.data.data);
+      } else {
+        console.error("Unexpected API response format:", response.data);
+        toast.error("Failed to load communities");
+      }
+    } catch (error) {
+      console.log("Failed to fetch communities", error);
+      toast.error("Failed to load communities");
+    }
+  };
+
+  // Handle community name input changes
+  const handleCommunityNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setCommunityName(value);
+    
+    if (value.trim() === '') {
+      setFilteredCommunities([]);
+      setShowSuggestions(false);
+      setIsValidCommunity(false);
+      return;
+    }
+
+    // Filter communities based on input
+    const filtered = communities.filter(communityName => 
+      communityName.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredCommunities(filtered);
+    setShowSuggestions(true);
+    
+    // Check if the exact community name exists
+    const exactMatch = communities.some(communityName => 
+      communityName.toLowerCase() === value.toLowerCase()
+    );
+    setIsValidCommunity(exactMatch);
+  };
+
+  // Handle community suggestion selection
+  const handleCommunitySelect = (selectedName: string) => {
+    setCommunityName(selectedName);
+    setShowSuggestions(false);
+    setIsValidCommunity(true);
+    toast.success("Valid community selected!");
+  };
+
+  const handleMediaUpload = (files: MediaFile[]) => {
+    setMediaFiles(files);
+  };
+
+  const validatePost = () => {
+    if (!title.trim()) {
+      toast.error('Title is required');
+      return false;
+    }
+    if (!content.trim()) {
+      toast.error('Content is required');
+      return false;
+    }
+    if (!communityName.trim()) {
+      toast.error('Community name is required');
+      return false;
+    }
+    if (!isValidCommunity) {
+      toast.error('Please select a valid community');
+      return false;
+    }
+    if (title.length > 100) {
+      toast.error('Title is too long (max 100 characters)');
+      return false;
+    }
+    if (content.length > 5000) {
+      toast.error('Content is too long (max 5000 characters)');
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmitPost = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validatePost()) return;
+    
+    try {
+      setLoading(true);
+      
+      // Get current user
+      const currentUser = await axios.get('/api/user/currentuser');
+      
+      // Create FormData instance
+      const formData = new FormData();
+      
+      // Append basic post data
+      formData.append('name', communityName);
+      formData.append('userid', currentUser.data.data._id);
+      formData.append('title', title.trim());
+      formData.append('content', content.trim());
+      
+      // Append media files
+      for (const file of mediaFiles) {
         try {
-            const response = await axios.get("http://localhost:3000/api/communities/communitynames")
-            setnames(response.data.data)
-         
+          // Fetch the file from the URL
+          const response = await fetch(file.url);
+          const blob = await response.blob();
+          
+          // Create a File object from the blob
+          const fileObject = new File([blob], `file-${Date.now()}.${file.type === 'image' ? 'jpg' : 'mp4'}`, {
+            type: file.type === 'image' ? 'image/jpeg' : 'video/mp4'
+          });
+          
+          // Append the file to FormData
+          
+          formData.append('files', fileObject);
+          console.log(formData);
         } catch (error) {
-          console.log("the data collextion faield",error)
+          console.error('Error processing file:', error);
+          toast.error('Error processing one or more files');
         }
       }
 
-    const upload= async function(data:any) {
-        try {
-           const response = await axios.post("http://localhost:3000/api/post",{
-              name:selected,
-              userid:"67321b641d90eec3661481da",
-              title:data.title,
-            content:data.content
-           })
-
-           console.log(response.data)
-        } catch (error) {
-           console.log("unable to upload the post")
-        }
-    }  
-
-    const postupload= (data:any)=>{
-        upload(data)
+      // Send the request with FormData
+      const response = await axios.post('/api/post', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+       console.log(response);
+      if (response.status === 200) {
+        toast.success('Post created successfully!');
+        router.push('/');
+      }
+    } catch (error: any) {
+      console.error('Post creation error:', error);
+      if (error.response?.status === 401) {
+        toast.error('Please login to create a post');
+        router.push('/Account/login');
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to create post');
+      }
+    } finally {
+      setLoading(false);
     }
+  };
 
-    useEffect(()=>{
-    community()
-    },[])  
-
-    useEffect(()=>{
-   const searched=names.filter((name:string)=>{
-         
-         return name.includes(inp)
-       })
-
-     setnames(searched)
-    },[inp])
-
-   
-    return (
-    
-        <div className="w-full h-screen bg-black flex flex-col items-center text-white">
-        <div className="w-1/2 h-screen  flex flex-col items-center mt-10">
-          <div className="w-4/5 items-center flex flex-col gap-5 ">
-            <input type="text" name="" id="inputField" className="rounded-[38px] w-full h-[50px] bg-black text-white shadow-sm shadow-white  font-Roboto Flex font-light text-lg  " placeholder="Type here..." onChange={(e)=>{
-               setinp(e.target.value)
-              
-            }} onClick={()=>{
-              setlistv(true)
-            }} value={selected}/>
-      
-            <div className={`w-4/5 h-[150px] bg-black overflow-hidden flex flex-col items-center shadow-sm shadow-white ${listv?"visible":"invisible" }`}  >
-                <ul>
-                  {
-                    names.map((name,index)=>{
-                      return(
-                        <li key={index} className='text-lg my-1 font-Roboto Flex' 
-                         onClick={()=>{
-                          
-                            setselected(name)
-                            setlistv(false)
-                        }}>{name}</li>
-                      )
-                    })
-                  }
-                </ul>
-                </div>
-               </div>
-            <form onSubmit={handleSubmit((data)=> postupload(data))} className='w-4/5'>
+  return (
+    <div className="min-h-screen bg-black py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        <form onSubmit={handleSubmitPost} className="bg-neutral-900 rounded-[38px] p-6 shadow-lg shadow-white">
+          <h1 className="text-3xl font-bold text-white mb-6">Create a Post</h1>
           
-            <div className="w-full h-[150px] bg-black mt-5 ">
-            <h1 className="text-2xl opacity-50 self-start ">Title </h1>
-             <input type="text"  id="inputField" className="rounded- w-full h-[80px] bg-black text-white shadow-sm shadow-white  mt-2 rounded-lg overflow-auto text-lg font-Roboto Flex" placeholder="Type here..." {...register("title")}/>
-            </div>
-      
-              <div className="w-full h-[220px] bg-black ">
-            <h1 className="text-2xl opacity-50 self-start ">Title </h1>
-             <input type="text"  id="inputField" className="rounded- w-full h-[160px] bg-black text-white shadow-sm shadow-white   rounded-lg mt-2 overflow-auto text-lg font-Roboto Flex " placeholder="Type here..." {...register("content")}/>
-            </div>
-          <button className="w-24 h-[50px] bg-green-400 rounded-xl">post</button>
-             </form>    
-             </div>
-           
-      
+          {/* Community Name Input with Suggestions */}
+          <div className="mb-6 relative">
+            <input
+              type="text"
+              value={communityName}
+              onChange={handleCommunityNameChange}
+              onFocus={() => setShowSuggestions(true)}
+              placeholder="Enter community name"
+              className={`w-full p-3 bg-neutral-800 text-white rounded-lg border ${
+                communityName && (isValidCommunity ? 'border-green-500' : 'border-red-500')
+              } focus:border-green-500 focus:ring-1 focus:ring-green-500`}
+              disabled={loading}
+            />
+            {communityName && !isValidCommunity && (
+              <p className="text-red-500 text-sm mt-1">Please select a valid community from the suggestions</p>
+            )}
+            {showSuggestions && filteredCommunities.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-neutral-800 border border-neutral-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                {filteredCommunities.map((name, index) => (
+                  <div
+                    key={index}
+                    className="px-4 py-2 hover:bg-neutral-700 cursor-pointer text-white"
+                    onClick={() => handleCommunitySelect(name)}
+                  >
+                    {name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Title Input */}
+          <div className="mb-6">
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter post title"
+              className="w-full p-3 bg-neutral-800 text-white rounded-lg border border-neutral-700 focus:border-green-500 focus:ring-1 focus:ring-green-500"
+              maxLength={100}
+              disabled={loading}
+            />
+            <p className="text-sm text-gray-400 mt-1">{title.length}/100 characters</p>
+          </div>
+
+          {/* Content Input */}
+          <div className="mb-6">
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Write your post content..."
+              className="w-full p-3 bg-neutral-800 text-white rounded-lg border border-neutral-700 focus:border-green-500 focus:ring-1 focus:ring-green-500 min-h-[200px]"
+              maxLength={5000}
+              disabled={loading}
+            />
+            <p className="text-sm text-gray-400 mt-1">{content.length}/5000 characters</p>
+          </div>
+
+          {/* Media Upload */}
+          <div className="mb-6">
+            <MediaUpload onMediaUpload={handleMediaUpload} />
+            {mediaFiles.length > 0 && (
+              <div className="mt-4">
+                <p className="text-sm text-gray-400 mb-2">
+                  {mediaFiles.length} {mediaFiles.length === 1 ? 'file' : 'files'} selected
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {mediaFiles.map((file, index) => (
+                    <div key={file.publicId} className="relative group">
+                      {file.type === 'image' ? (
+                        <img
+                          src={file.url}
+                          alt={`Uploaded media ${index + 1}`}
+                          className="w-full h-48 object-cover rounded-lg"
+                        />
+                      ) : (
+                        <video
+                          src={file.url}
+                          controls
+                          className="w-full h-48 object-cover rounded-lg"
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Submit Button */}
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={loading}
+              className={`px-6 py-3 rounded-full font-semibold text-white ${
+                loading 
+                  ? 'bg-gray-500 cursor-not-allowed' 
+                  : 'bg-green-500 hover:bg-green-600'
+              } transition-colors`}
+            >
+              {loading ? 'Creating Post...' : 'Create Post'}
+            </button>
+          </div>
+        </form>
       </div>
-    
-    )
+    </div>
+  );
 }
 
-export default Page
+export default Page;

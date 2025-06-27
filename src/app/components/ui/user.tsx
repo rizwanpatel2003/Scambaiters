@@ -32,10 +32,10 @@ function User() {
             </div>
             </div>
             <div>
-            <button className='text-white font-Roboto Flex font-bold text-sm ml-14 mt-2 hover:text-green-300 block'onClick={()=>{
+            <button className='text-black font-Roboto Flex font-bold text-sm ml-14 mt-2 hover:text-green-300 block'onClick={()=>{
               router.push("/Account/signup")
             }}> {email} </button>
-            <button className='text-white font-Roboto Flex font-bold text-xl  mt-2 hover:text-green-300 ml-14' onClick={()=>{
+            <button className='text-black font-Roboto Flex font-bold text-xl  mt-2 hover:text-green-300 ml-14' onClick={()=>{
               router.push("/Account/login")
             }}>{name}</button> 
           </div>
@@ -44,4 +44,3 @@ function User() {
 }
 
 export default User
-
