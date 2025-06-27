@@ -5,7 +5,7 @@ import Volunteer from './Volunteer'
 
 function Sidebar() {
     return (
-        <aside className="flex flex-col flex-shrink-0 min-w-[260px] max-w-[320px] w-full h-screen sticky top-0 bg-[#f6f7f8] dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-800 px-4 py-6 overflow-y-auto">
+        <aside className="w-full md:w-1/4 h-auto md:h-screen flex flex-col sticky top-0 bg-white dark:bg-black md:bg-transparent md:dark:bg-transparent p-2 md:p-0 z-10">
            <User />
            <SidebarNav />
            <Volunteer />
