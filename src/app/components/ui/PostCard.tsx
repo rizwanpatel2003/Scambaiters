@@ -108,15 +108,15 @@ function PostCard({postId, name, title, content, communityId, Tlike, comments, m
 
     return (
         <div 
-            className="my-10 rounded-[38px] w-11/12 shadow-lg p-4 transition-transform transform hover:-translate-y-1"
+            className="w-full max-w-xl my-6 rounded-[38px] shadow-lg p-4 transition-transform transform hover:-translate-y-1 bg-white dark:bg-neutral-900 mx-auto flex flex-col gap-4"
             style={{ backgroundColor: cardColor }}
         >
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center">
                     <img src="https://via.placeholder.com/50" alt="Profile Picture" className="rounded-full w-10 h-10" />
                     <div className="ml-3">
                         <h3 
-                            className="text-xl text-black font-semibold font-Roboto Flex cursor-pointer hover:underline"
+                            className="text-lg md:text-xl text-black font-semibold font-Roboto Flex cursor-pointer hover:underline"
                             onClick={() => { router.push(`/community/${communityId}`) }}
                         >
                             {name}
@@ -125,7 +125,7 @@ function PostCard({postId, name, title, content, communityId, Tlike, comments, m
                 </div>
                 <div className="flex items-center">
                     <button 
-                        className="text-white bg-black hover:bg-gray-800 mr-2 w-20 h-[40px] rounded-[38px] text-lg font-Roboto Flex font-bold transition-colors" 
+                        className="text-white bg-black hover:bg-gray-800 mr-2 w-16 md:w-20 h-10 rounded-[38px] text-base md:text-lg font-Roboto Flex font-bold transition-colors" 
                         onClick={followUpdate}
                     >
                         Join
@@ -133,30 +133,30 @@ function PostCard({postId, name, title, content, communityId, Tlike, comments, m
                 </div>
             </div>
             
-            <h2 className="text-black text-2xl font-Roboto Flex font-bold mb-4">
+            <h2 className="text-black text-xl md:text-2xl font-Roboto Flex font-bold mb-2 md:mb-4">
                 {title}
             </h2>
             
             <p 
-                className="text-black text-lg font-semibold font-Roboto Flex mb-4 cursor-pointer hover:opacity-90"
+                className="text-black text-base md:text-lg font-semibold font-Roboto Flex mb-2 md:mb-4 cursor-pointer hover:opacity-90"
                 onClick={() => { router.push(`/comments/${postId}`) }}
             >
                 {content}
             </p>
 
             {media && media.length > 0 && (
-                <div className="mb-4">
+                <div className="mb-2 md:mb-4">
                     <div className="relative rounded-lg overflow-hidden bg-black/5">
                         {isImage(media[activeMediaIndex].contentType) ? (
                             <img
                                 src={`/api/media?id=${media[activeMediaIndex].fileId}`}
                                 alt={media[activeMediaIndex].filename}
-                                className="w-full max-h-[500px] object-contain"
+                                className="w-full max-h-72 md:max-h-[500px] object-contain"
                             />
                         ) : isVideo(media[activeMediaIndex].contentType) ? (
                             <video
                                 src={`/api/media?id=${media[activeMediaIndex].fileId}`}
-                                className="w-full max-h-[500px] object-contain"
+                                className="w-full max-h-72 md:max-h-[500px] object-contain"
                                 controls
                             />
                         ) : null}
@@ -178,7 +178,7 @@ function PostCard({postId, name, title, content, communityId, Tlike, comments, m
                 </div>
             )}
             
-            <div className="flex items-center justify-between px-[5vh] mt-4">
+            <div className="flex flex-wrap gap-4 mt-2">
                 <button 
                     className={`flex items-center gap-2 transition-colors ${hasLiked ? 'text-green-600' : 'text-black'} hover:opacity-80`}
                     onClick={handleLike}
