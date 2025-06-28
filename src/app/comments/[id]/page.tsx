@@ -139,9 +139,12 @@ export default function Page() {
 
   return (
     <div className='flex w-full'>
-      <Sidebar />
-      <div className="flex-1 flex flex-col items-center">
-        <div className="w-3/4 flex justify-center items-center">
+      <div className='w-1/4'>
+        <Sidebar></Sidebar>
+        </div>
+      <div className="w-3/4 flex-1 flex flex-col items-center justify-center">
+      
+        <div className="w-full flex justify-center items-center">
           <PostCard 
             postId={post._id} 
             name={post.name} 

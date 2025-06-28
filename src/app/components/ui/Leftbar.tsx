@@ -20,7 +20,7 @@ function Leftbar() {
         router.push("/post")
     }
     return (
-        <aside className="w-full lg:w-1/4 h-auto lg:h-screen sticky top-0 bg-white dark:bg-black lg:bg-transparent lg:dark:bg-transparent p-2 lg:p-0 z-10">
+        <aside className="w-full h-auto lg:h-screen sticky top-0 bg-white dark:bg-black lg:bg-transparent lg:dark:bg-transparent p-2 lg:p-0 z-10">
             <div className="mt-10 flex items-center justify-center">
                 <button onClick={handleCreatePost}>
                     <IconPlus className="text-black w-[40px] h-[40px] mx-5 hover:scale-110 transition-transform" />

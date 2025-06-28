@@ -57,7 +57,9 @@ setdes(response.data.data.
 
     return (
       <div className="flex  w-full">
+        <div className='w-1/4'>
         <Sidebar></Sidebar>
+        </div>
         <div className=" flex flex-col flex-1 text-white">
           <Banner name={name}></Banner>
           <div className="w-full flex">
