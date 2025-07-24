@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { uploadFile } from "../../../lib/gridfs";
 import connectDB from "../../../lib/db";
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_TYPES = [
+  "image/jpeg", "image/png", "image/gif", "image/webp",
+  "video/mp4", "video/webm", "video/ogg"
+];
+
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
@@ -12,6 +18,20 @@ export async function POST(request: NextRequest) {
     if (!file) {
       return NextResponse.json({
         message: "No file provided",
+        status: 400
+      });
+    }
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return NextResponse.json({
+        message: `File type not allowed. Allowed types: ${ALLOWED_TYPES.join(', ')}`,
+        status: 400
+      });
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({
+        message: `File too large. Max size is ${MAX_FILE_SIZE / (1024 * 1024)}MB`,
         status: 400
       });
     }

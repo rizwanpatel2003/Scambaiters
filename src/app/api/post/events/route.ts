@@ -1,12 +1,12 @@
 import { NextRequest } from 'next/server';
 import { Post } from '../../../Models/Post';
 import connectDB from '../../../lib/db';
+import mongoose from 'mongoose';
 
 export async function GET(request: NextRequest) {
     const postId = request.nextUrl.searchParams.get('postId');
-    
-    if (!postId) {
-        return new Response('Post ID is required', { status: 400 });
+    if (!postId || !mongoose.Types.ObjectId.isValid(postId)) {
+        return new Response('Valid post ID is required', { status: 400 });
     }
 
     const encoder = new TextEncoder();
@@ -33,7 +33,9 @@ export async function GET(request: NextRequest) {
                     .lean();
 
                 if (!post) {
-                    throw new Error('Post not found');
+                    clearInterval(intervalId);
+                    writer.close();
+                    return;
                 }
 
                 const data = {
@@ -44,7 +46,6 @@ export async function GET(request: NextRequest) {
                 const eventData = `data: ${JSON.stringify(data)}\n\n`;
                 await writer.write(encoder.encode(eventData));
             } catch (error) {
-                console.error('Error sending update:', error);
                 clearInterval(intervalId);
                 writer.close();
             }
@@ -64,7 +65,6 @@ export async function GET(request: NextRequest) {
 
         return new Response(stream.readable, { headers });
     } catch (error) {
-        console.error('SSE setup error:', error);
         return new Response('Internal Server Error', { status: 500 });
     }
 } 

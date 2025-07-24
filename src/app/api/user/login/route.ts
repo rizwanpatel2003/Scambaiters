@@ -4,25 +4,37 @@ import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 import connectDB from "../../../lib/db";
 
+// For production, consider adding rate limiting to prevent abuse.
+
+function isValidEmail(email: string) {
+  return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+}
+
 export async function POST(request: NextRequest) {
   try {
-     await connectDB();
+    await connectDB();
     const reqBody = await request.json();
-    console.log(reqBody);
     const { email, password } = reqBody;
-     
+
+    if (!email || !isValidEmail(email)) {
+      return NextResponse.json({ error: "Valid email is required" }, { status: 400 });
+    }
+    if (!password || password.trim() === "") {
+      return NextResponse.json({ error: "Password is required" }, { status: 400 });
+    }
+
     const findUser = await User.findOne({ email });
     if (!findUser) {
       return NextResponse.json({
-        error: "user not registered",
+        error: "User not registered",
         status: 401
       });
     }
-    
+
     const passwordcheck = await bcrypt.compare(password, findUser.password);
     if (!passwordcheck) {
       return NextResponse.json({
-        error: "incorrect password",
+        error: "Incorrect password",
         status: 401
       });
     }
@@ -39,11 +51,11 @@ export async function POST(request: NextRequest) {
       findUser._id,
       { $set: { accessToken: token } },
       { new: true }
-    );
+    ).select("-password");
 
     // Create the response
     const response = NextResponse.json({
-      message: "user logged in successfully",
+      message: "User logged in successfully",
       data: user,
       status: 200
     });
@@ -59,12 +71,12 @@ export async function POST(request: NextRequest) {
       maxAge: 7 * 24 * 60 * 60 // 7 days
     });
 
-    console.log("Setting cookie in response:", response.cookies.getAll());
     return response;
   } catch (error: any) {
     console.log("Login error:", error.message);
     return NextResponse.json({
       error: "Login failed",
+      details: error?.message || error,
       status: 500
     });
   }

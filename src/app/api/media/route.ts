@@ -6,8 +6,8 @@ import connectDB from "../../lib/db";
 export async function GET(request: NextRequest) {
   try {
     const fileId = request.nextUrl.searchParams.get('id');
-    if (!fileId) {
-      return NextResponse.json({ error: "File ID is required" }, { status: 400 });
+    if (!fileId || !ObjectId.isValid(fileId)) {
+      return NextResponse.json({ error: "Valid file ID is required" }, { status: 400 });
     }
 
     const { bucket } = await connectDB();
@@ -16,7 +16,6 @@ export async function GET(request: NextRequest) {
     // Get file metadata first
     const files = await bucket.find({ _id: new ObjectId(fileId) }).toArray();
     if (files.length === 0) {
-      console.error(`File not found with ID: ${fileId}`);
       return NextResponse.json({ error: "File not found" }, { status: 404 });
     }
     const fileMetadata = files[0];
@@ -38,7 +37,6 @@ export async function GET(request: NextRequest) {
     
     return response;
   } catch (error: any) {
-    console.error("Error serving file:", error);
     return NextResponse.json(
       { error: error.message || "File not found" },
       { status: 404 }

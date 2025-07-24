@@ -2,6 +2,7 @@ import connectDB from "../../../lib/db";
 import { Post } from "../../../Models/Post";
 import { User } from "../../../Models/User";
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 
 export async function POST(request: NextRequest) {
     try {
@@ -9,8 +10,12 @@ export async function POST(request: NextRequest) {
         const reqBody = await request.json();
         const { userId, postId } = reqBody;
         
-        if (!userId || !postId) {
-            return NextResponse.redirect("/Account/login");
+        if (!userId || !mongoose.Types.ObjectId.isValid(userId) ||
+            !postId || !mongoose.Types.ObjectId.isValid(postId)) {
+            return NextResponse.json({
+                message: "Valid userId and postId are required",
+                status: 400
+            });
         }
 
         // Check if post exists
@@ -32,6 +37,7 @@ export async function POST(request: NextRequest) {
         }
 
         const hasLiked = user.postLiked?.some((field: any) => String(field) === String(postId)) || false;
+        let updatedPost;
 
         if (hasLiked) {
             // Unlike: Remove post from user's liked posts and decrement count, but never go below zero
@@ -40,10 +46,11 @@ export async function POST(request: NextRequest) {
                 { $pull: { postLiked: postId } }
             );
 
-            await Post.findByIdAndUpdate(
+            updatedPost = await Post.findByIdAndUpdate(
                 postId,
-                { $set: { likes: Math.max(0, (post.likes || 0) - 1) } }
-            );
+                { $set: { likes: Math.max(0, (post.likes || 0) - 1) } },
+                { new: true, projection: { likes: 1 } }
+            ).lean();
         } else {
             // Like: Add post to user's liked posts and increment count
             await User.findByIdAndUpdate(
@@ -51,14 +58,16 @@ export async function POST(request: NextRequest) {
                 { $addToSet: { postLiked: postId } }
             );
 
-            await Post.findByIdAndUpdate(
+            updatedPost = await Post.findByIdAndUpdate(
                 postId,
-                { $inc: { likes: 1 } }
-            );
+                { $inc: { likes: 1 } },
+                { new: true, projection: { likes: 1 } }
+            ).lean();
         }
 
         return NextResponse.json({
             message: hasLiked ? "Post unliked successfully" : "Post liked successfully",
+            likes: updatedPost?.likes ?? 0,
             status: 200
         });
     } catch (error) {

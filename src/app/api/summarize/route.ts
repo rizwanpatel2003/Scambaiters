@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+const MAX_CONTENT_LENGTH = 2000;
+
 export async function POST(request: NextRequest) {
   try {
     const { content } = await request.json();
 
-    if (!content) {
+    if (!content || typeof content !== 'string' || content.trim() === '') {
       return NextResponse.json({ error: 'Content is required' }, { status: 400 });
+    }
+    if (content.length > MAX_CONTENT_LENGTH) {
+      return NextResponse.json({ error: `Content too long. Max length is ${MAX_CONTENT_LENGTH} characters.` }, { status: 400 });
     }
 
     const geminiApiKey = process.env.GEMINI_API_KEY;
@@ -23,7 +28,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ summary });
   } catch (error) {
-    console.error('Gemini summarization error:', error);
     return NextResponse.json(
       { error: 'Failed to generate summary with Gemini. Please try again later.' },
       { status: 500 }
